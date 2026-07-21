@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이슈환전소 · 상황실</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+  :root{
+    --bg:#0a0e14;
+    --bg2:#0f1520;
+    --panel:#111926;
+    --line:#1e2b3d;
+    --line2:#2a3a52;
+    --ink:#dbe4f0;
+    --ink-dim:#8296b0;
+    --ink-faint:#4a5b74;
+    --navy:#3a6bc4;
+    --amber:#e0a44a;
+    --amber-bright:#f2b95e;
+    --green:#4ec98a;
+    --red:#e06a5a;
+    --mono:'JetBrains Mono',monospace;
+    --kr:'Noto Sans KR',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--kr);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.14) 2px 3px);
+    opacity:.35;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;position:relative;z-index:2}
+
+  /* ---- top bar ---- */
+  .topbar{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0d131d,#0a0e14);
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(6px);
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:54px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:.06em;font-size:15px;color:var(--ink)}
+  .brand b{color:var(--amber)}
+  .brand .dot{color:var(--green);animation:blink 1.6s steps(1) infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .clocks{display:flex;gap:16px;font-family:var(--mono);font-size:11.5px;color:var(--ink-dim)}
+  .clocks span b{color:var(--ink);font-weight:500}
+  @media(max-width:680px){.clocks{display:none}}
+
+  /* ---- hero / globe ---- */
+  .hero{
+    display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;
+    padding:30px 0 26px;border-bottom:1px solid var(--line);
+  }
+  .globe-box{
+    border:1px solid var(--line2);background:#080c12;border-radius:8px;
+    padding:12px 14px;position:relative;overflow:hidden;
+    box-shadow:0 0 40px rgba(58,107,196,.08) inset;
+  }
+  .globe-box::before{
+    content:"◉ LIVE";position:absolute;top:8px;right:10px;
+    font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:.1em;
+    animation:blink 2s steps(1) infinite;
+  }
+  #globe{
+    font-family:var(--mono);font-size:10px;line-height:1.02;white-space:pre;
+    color:var(--navy);text-shadow:0 0 6px rgba(58,107,196,.4);
+    margin:0;letter-spacing:0;
+  }
+  #globe .lit{color:var(--amber-bright);text-shadow:0 0 8px rgba(240,180,90,.7)}
+  .globe-cap{
+    font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    text-align:center;margin-top:8px;letter-spacing:.05em;
+  }
+  .globe-cap b{color:var(--amber)}
+  .hero-txt h1{
+    font-family:var(--kr);font-weight:900;font-size:30px;line-height:1.22;
+    letter-spacing:-.01em;margin-bottom:10px;
+  }
+  .hero-txt h1 em{color:var(--amber);font-style:normal}
+  .hero-txt .sub{color:var(--ink-dim);font-size:14px;max-width:52ch}
+  .hero-txt .meta{
+    margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+    display:flex;gap:14px;flex-wrap:wrap;
+  }
+  .hero-txt .meta b{color:var(--green)}
+  @media(max-width:760px){
+    .hero{grid-template-columns:1fr;gap:18px}
+    #globe{font-size:8.5px}
+    .hero-txt h1{font-size:24px}
+  }
+
+  /* ---- section head ---- */
+  .sec-head{
+    display:flex;align-items:baseline;gap:12px;margin:28px 0 14px;
+    font-family:var(--mono);
+  }
+  .sec-head .idx{color:var(--amber);font-size:12px;font-weight:700}
+  .sec-head h2{font-family:var(--kr);font-weight:800;font-size:17px;color:var(--ink);letter-spacing:-.01em}
+  .sec-head .ln{flex:1;height:1px;background:var(--line);align-self:center}
+  .sec-head .cnt{color:var(--ink-faint);font-size:11px}
+
+  /* ---- news cards ---- */
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .card{
+    border:1px solid var(--line);background:var(--panel);border-radius:8px;
+    overflow:hidden;transition:border-color .2s,transform .2s;
+  }
+  .card:hover{border-color:var(--line2);transform:translateY(-1px)}
+  .card-top{
+    display:flex;align-items:center;gap:10px;padding:11px 16px;
+    border-bottom:1px solid var(--line);background:rgba(255,255,255,.012);
+    font-family:var(--mono);font-size:11px;
+  }
+  .region-tag{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:2px 8px;border:1px solid var(--line2);border-radius:4px;
+    color:var(--amber);font-weight:500;
+  }
+  .region-tag .pin{color:var(--red)}
+  .sev{margin-left:auto;letter-spacing:.12em;font-size:10px}
+  .sev.hi{color:var(--red)} .sev.mid{color:var(--amber)} .sev.lo{color:var(--ink-dim)}
+  .card-body{padding:14px 16px 16px}
+  .card-body h3{font-size:16px;font-weight:700;line-height:1.4;margin-bottom:10px}
+  .flow{display:grid;grid-template-columns:1fr;gap:8px}
+  .flow-row{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:start;font-size:13.5px}
+  .flow-row .k{
+    font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
+    padding-top:3px;letter-spacing:.03em;text-transform:uppercase;
+  }
+  .flow-row.exch .k{color:var(--amber)}
+  .flow-row.exch .v{color:var(--amber-bright);font-weight:500}
+  .flow-row .v{color:var(--ink-dim)}
+  .flow-row .v b{color:var(--ink);font-weight:600}
+
+  /* ---- paste tool ---- */
+  .tool{
+    border:1px dashed var(--line2);border-radius:8px;background:var(--bg2);
+    padding:18px;margin-top:8px;
+  }
+  .tool .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-dim);margin-bottom:10px}
+  .tool .lbl b{color:var(--amber)}
+  .tool textarea{
+    width:100%;min-height:96px;background:#080c12;border:1px solid var(--line);
+    border-radius:6px;color:var(--ink);font-family:var(--kr);font-size:14px;
+    padding:12px;resize:vertical;line-height:1.6;
+  }
+  .tool textarea:focus{outline:none;border-color:var(--navy)}
+  .tool textarea::placeholder{color:var(--ink-faint)}
+  .tool-bar{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .btn{
+    font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;
+    padding:8px 16px;border-radius:6px;border:1px solid var(--navy);
+    background:rgba(58,107,196,.14);color:var(--ink);transition:.15s;letter-spacing:.03em;
+  }
+  .btn:hover{background:rgba(58,107,196,.28)}
+  .btn.ghost{border-color:var(--line2);background:transparent;color:var(--ink-dim)}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--ink-faint)}
+  .tool .hint{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-left:auto}
+  @media(max-width:680px){.tool .hint{margin-left:0;width:100%}}
+
+  /* footer */
+  .foot{
+    border-top:1px solid var(--line);margin-top:40px;padding:22px 0 40px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .foot b{color:var(--ink-dim)}
+  .note{
+    background:rgba(224,164,74,.06);border:1px solid rgba(224,164,74,.2);
+    border-radius:6px;padding:10px 14px;margin:16px 0 4px;
+    font-size:12px;color:var(--ink-dim);font-family:var(--mono);line-height:1.7;
+  }
+  .note b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">환전<b>소</b>_상황실<span class="dot">▮</span></div>
+    <div class="clocks" id="clocks"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO + GLOBE -->
+  <div class="hero">
+    <div class="globe-box">
+      <pre id="globe"></pre>
+      <div class="globe-cap">활성 지역 <b id="active-region">— 전 세계 —</b></div>
+    </div>
+    <div class="hero-txt">
+      <h1>세계를 읽고,<br><em>쓸 수 있는 지식</em>으로 환전합니다</h1>
+      <div class="sub">국제 뉴스를 글로벌 동향 → 한국 연결 → 환전 포인트로 정리하는 브리핑 상황실. 회전하는 지구본이 지금 다루는 이슈의 지역을 비춥니다.</div>
+      <div class="meta">
+        <span>BRIEF <b id="today"></b></span>
+        <span>ITEMS <b id="item-count">4</b></span>
+        <span id="feed-badge">○ 연결 확인 중…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRIEFING -->
+  <div class="sec-head">
+    <span class="idx">§01</span>
+    <h2>오늘의 브리핑</h2>
+    <span class="ln"></span>
+    <span class="cnt" id="brief-cnt"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+
+  <!-- PASTE TOOL -->
+  <div class="sec-head">
+    <span class="idx">§02</span>
+    <h2>뉴스 붙여넣기 → 카드 생성</h2>
+    <span class="ln"></span>
+    <span class="cnt">BETA</span>
+  </div>
+  <div class="tool">
+    <div class="lbl">뉴스 제목이나 원문을 붙여넣으면 <b>지역을 감지</b>해 카드로 추가합니다. (지역 키워드 자동 태깅)</div>
+    <textarea id="paste" placeholder="예) 이란이 호르무즈 해협 통항료 부과를 재확인하며 미국과 대치를 이어가고 있다..."></textarea>
+    <div class="tool-bar">
+      <button class="btn" onclick="addFromPaste()">▸ 카드 생성</button>
+      <button class="btn ghost" onclick="document.getElementById('paste').value=''">지우기</button>
+      <span class="hint">지구본이 감지된 지역으로 회전합니다</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>참고 ·</b> 이 페이지는 브라우저 보안(CORS)상 뉴스 API를 직접 실시간 수집하지 못합니다. 자동 갱신은 n8n 등 외부 수집 → JSON 주입 방식으로 확장하세요. 지금은 ①내장 데이터 ②붙여넣기 도구로 동작하는 프로토타입입니다.
+  </div>
+
+  <div class="foot">
+    <span>ISSUE_EXCHANGE // SITUATION_ROOM <b>v0.1</b></span>
+    <span id="foot-time"></span>
+  </div>
+
+</div>
+
+<script>
+/* ============ 회전 지구본 ASCII ============ */
+const R = 13;                     // 반지름(문자)
+const W = 2*R+1, H = 2*R+1;
+// 대륙 대략 좌표(경도 lon: -180~180, 위도 lat: -90~90) — 러프한 랜드마스크
+const LAND = [];
+(function seedLand(){
+  // 간단한 대륙 블록 (lon범위, lat범위)
+  const blocks=[
+    [-165,-55, 60,72],   // 북미
+    [-90,-35,-56,12],    // 남미
+    [-12,55, 34,71],     // 유럽
+    [-18,52,-35,34],     // 아프리카
+    [40,150, 8,73],      // 아시아
+    [113,154,-39,-11],   // 호주
+  ];
+  for(let lat=-90;lat<=90;lat+=3){
+    for(let lon=-180;lon<=180;lon+=3){
+      for(const b of blocks){
+        if(lon>=b[0]&&lon<=b[1]&&lat>=b[2]&&lat<=b[3]){ LAND.push([lon,lat]); break; }
+      }
+    }
+  }
+})();
+
+// 지역 → 중심 경도(회전 타겟)
+const REGION_LON = {
+  '중동':48,'미국':-95,'유럽':10,'아시아':110,'한반도':127,'중국':105,
+  '러시아':90,'우크라이나':32,'아프리카':20,'남미':-60,'호주':134,'전 세계':30
+};
+let curLon = 30, targetLon = 30;
+
+function renderGlobe(rotLon){
+  const grid = Array.from({length:H},()=>Array(W).fill(' '));
+  for(let j=0;j<H;j++){
+    for(let i=0;i<W;i++){
+      const x=(i-R)/R, y=(j-R)/R;
+      if(x*x+y*y<=1.02){
+        grid[j][i]='·';                // 바다/구체 표면
+      }
+    }
+  }
+  // 육지 투영
+  for(const [lon,lat] of LAND){
+    const rlon=(lon - rotLon)*Math.PI/180;
+    const rlat=lat*Math.PI/180;
+    const x=Math.cos(rlat)*Math.sin(rlon);
+    const z=Math.cos(rlat)*Math.cos(rlon);
+    const y=Math.sin(rlat);
+    if(z<0) continue;                  // 뒷면 컬링
+    const i=Math.round(R + x*R);
+    const j=Math.round(R - y*R);
+    if(i>=0&&i<W&&j>=0&&j<H){
+      grid[j][i] = (z>0.55?'#':(z>0.25?'▓':'░'));
+    }
+  }
+  // 활성 지역 하이라이트 마커
+  const tlon = ((targetLon - rotLon)*Math.PI/180);
+  const mx=Math.sin(tlon), mz=Math.cos(tlon);
+  if(mz>0){
+    const i=Math.round(R+mx*R*0.72), j=R;
+    if(grid[j]&&grid[j][i]!==undefined) grid[j][i]='@';
+  }
+  // 문자열화 + 하이라이트 스팬
+  let out='';
+  for(let j=0;j<H;j++){
+    for(let i=0;i<W;i++){
+      const c=grid[j][i];
+      if(c==='@') out+='<span class="lit">◉</span>';
+      else out+=c;
+    }
+    out+='\n';
+  }
+  document.getElementById('globe').innerHTML=out;
+}
+function tick(){
+  curLon=(curLon+0.8)%360; if(curLon>180)curLon-=360;
+  renderGlobe(curLon);
+  requestAnimationFrame(tick);
+}
+tick();
+
+function focusRegion(name){
+  const lon = REGION_LON[name] ?? 30;
+  targetLon = lon;
+  document.getElementById('active-region').textContent = '— '+name+' —';
+}
+
+/* ============ 지역 감지 ============ */
+const REGION_KW = {
+  '중동':['이란','이스라엘','호르무즈','중동','레바논','헤즈볼라','가자','사우디','카타르','테헤란'],
+  '미국':['미국','트럼프','연준','워싱턴','백악관','달러','나스닥','fed','의회'],
+  '중국':['중국','시진핑','베이징','알리바바','딥시크','대만'],
+  '한반도':['한국','북한','코스피','원화','환율','이재명','김정은','전작권','쿠팡','삼성','sk하이닉스'],
+  '러시아':['러시아','푸틴','모스크바','크렘린'],
+  '우크라이나':['우크라이나','젤렌스키','크림'],
+  '유럽':['유럽','영국','프랑스','독일','eu','나토','스타머','g7'],
+  '아시아':['일본','인도','아세안','필리핀','도쿄'],
+  '아프리카':['아프리카','남아공','수단','나이지리아'],
+  '남미':['콜롬비아','브라질','베네수엘라','아르헨티나'],
+  '호주':['호주','오스트레일리아']
+};
+function detectRegion(txt){
+  const t=txt.toLowerCase();
+  let best='전 세계',bestN=0;
+  for(const [r,kws] of Object.entries(REGION_KW)){
+    let n=0; for(const k of kws){ if(t.includes(k.toLowerCase())) n++; }
+    if(n>bestN){bestN=n;best=r;}
+  }
+  return best;
+}
+
+/* ============ 내장 브리핑 데이터 ============ */
+const BRIEF = [
+  {
+    region:'중동', sev:'hi', title:'미·이란 정전 균열 — 호르무즈 통제권 서사전 지속',
+    global:'서명된 MoU에도 이란은 "해협은 향후 30일간 이란 통제 하"라며 통항료(서비스 요금) 부과를 재확인. 미국은 "국제 수로"라 반박하며 해병 원정부대를 증파.',
+    kr:'한국 원유 수입의 68.8%가 중동산으로 호르무즈를 통과. 유가·정유·해운·물류에 직결.',
+    exch:'"서명=평화 아님." 선언과 이행의 시차 → 기름값은 2~3주 뒤 반영, 60일 후 통항료 변수.'
+  },
+  {
+    region:'한반도', sev:'hi', title:'코스피 롤러코스터 — 반도체 쏠림이 만든 변동성',
+    global:'글로벌 반도체 차익실현으로 6월 코스피가 서킷브레이커 3회·사이드카 9회. 외국인 상반기 148조 순매도(역대 최대).',
+    kr:'삼성·SK하이닉스 2분기 사상 최대 실적 예상 — "주가는 폭락, 실적은 최대"의 괴리.',
+    exch:'내 펀드 속 반도체의 운명 = AI 거품 논쟁 + 환율. 실적 시즌이 방향 결정.'
+  },
+  {
+    region:'한반도', sev:'mid', title:'원/달러 1,555원 — 금융위기 이후 최고 고착',
+    global:'연준 매파 기조·달러 강세에 더해 외국인 이탈이 겹침.',
+    kr:'수출은 사상 최대(반도체 60%↑)인데 원화는 약세 — 상승분의 70%가 해외투자發 달러 수요.',
+    exch:'해외여행·유학·수입물가·기름값이 모두 환율을 타고 오른다. 외교로도 단번엔 못 잡는 구조.'
+  },
+  {
+    region:'미국', sev:'mid', title:'쿠팡 개인정보 유출 → 미 의회 "한국의 미국기업 탄압"',
+    global:'미 하원 법사위 보고서(7/1)가 3,370만 유출 사건을 "한국 정부의 차별적 공격"으로 규정. 백악관도 가세.',
+    kr:'같은 사건이 한국에선 "은폐 의혹", 미국에선 "피해 기업"으로 역전 — 그 사이에 역대급 로비.',
+    exch:'국제뉴스 읽는 법 = 같은 사실의 두 서사를 구별하기. 통상 압박이 관세·플랫폼 요금으로 환류.'
+  }
+];
+
+function sevLabel(s){return s==='hi'?'CRITICAL':s==='mid'?'WATCH':'NOTE';}
+function cardHTML(d){
+  return `<div class="card">
+    <div class="card-top">
+      <span class="region-tag"><span class="pin">◆</span>${d.region}</span>
+      <span class="sev ${d.sev}">● ${sevLabel(d.sev)}</span>
+    </div>
+    <div class="card-body">
+      <h3>${d.title}</h3>
+      <div class="flow">
+        <div class="flow-row"><div class="k">Global</div><div class="v">${d.global}</div></div>
+        <div class="flow-row"><div class="k">→ Korea</div><div class="v">${d.kr}</div></div>
+        <div class="flow-row exch"><div class="k">＄ 환전</div><div class="v">${d.exch}</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+function renderCards(){
+  document.getElementById('cards').innerHTML = BRIEF.map(cardHTML).join('');
+  document.getElementById('item-count').textContent = BRIEF.length;
+  document.getElementById('brief-cnt').textContent = BRIEF.length+' items';
+}
+renderCards();
+
+/* ============ n8n이 생성한 briefing.json 자동 로드 ============ */
+/* briefing.json을 이 HTML과 같은 폴더(또는 아래 경로)에 두면 자동으로 내장 데이터를 대체합니다.
+   실패 시(파일 없음/CORS 등) 위 내장 BRIEF 데이터가 그대로 표시됩니다(fallback). */
+const FEED_URL = './briefing.json';   // GitHub Actions가 저장소 루트에 커밋하는 파일과 같은 경로 (수정 불필요)
+
+async function loadFeed(){
+  try{
+    const res = await fetch(FEED_URL, { cache:'no-store' });
+    if(!res.ok) throw new Error('no feed');
+    const data = await res.json();
+    if(!data.cards || !data.cards.length) throw new Error('empty feed');
+    BRIEF.length = 0;
+    data.cards.forEach(c=> BRIEF.push({
+      region: c.region || '전 세계',
+      sev: c.sev || 'lo',
+      title: c.title,
+      global: c.global,
+      kr: c.korea,
+      exch: c.exchange,
+    }));
+    renderCards();
+    document.getElementById('feed-badge').textContent =
+      '● LIVE FEED · ' + new Date(data.generatedAt).toLocaleString('ko-KR');
+    document.getElementById('feed-badge').style.color = 'var(--green)';
+  }catch(e){
+    document.getElementById('feed-badge').textContent = '○ 내장 데이터 표시 중 (briefing.json 미연결)';
+    document.getElementById('feed-badge').style.color = 'var(--ink-faint)';
+  }
+}
+loadFeed();
+setInterval(loadFeed, 5*60*1000);   // 5분마다 재확인
+
+/* 카드 hover 시 지구본 포커스 */
+document.getElementById('cards').addEventListener('mouseover',e=>{
+  const card=e.target.closest('.card'); if(!card)return;
+  const idx=[...card.parentNode.children].indexOf(card);
+  if(BRIEF[idx]) focusRegion(BRIEF[idx].region);
+});
+document.getElementById('cards').addEventListener('mouseleave',()=>focusRegion('전 세계'));
+
+/* 붙여넣기 → 카드 */
+function addFromPaste(){
+  const ta=document.getElementById('paste');
+  const txt=ta.value.trim(); if(!txt)return;
+  const region=detectRegion(txt);
+  const title=txt.length>70?txt.slice(0,70)+'…':txt;
+  BRIEF.unshift({
+    region, sev:'lo', title,
+    global:'(붙여넣은 원문 — 편집 필요)',
+    kr:'(한국 연결 포인트를 입력하세요)',
+    exch:'(환전 포인트를 입력하세요)'
+  });
+  renderCards();
+  focusRegion(region);
+  ta.value='';
+  document.querySelector('#cards .card').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* 시계 */
+function pad(n){return String(n).padStart(2,'0')}
+function fmt(d){return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+function tzTime(off){const d=new Date(Date.now()+ (off*60 - (-new Date().getTimezoneOffset()))*60000*0 + off*3600000 - new Date().getTimezoneOffset()*60000 - off*0);return d;}
+function updateClocks(){
+  const now=new Date();
+  const zones=[['SEO',9],['NYC',-4],['LON',1]];
+  const html=zones.map(([c,off])=>{
+    const u=now.getTime()+now.getTimezoneOffset()*60000+off*3600000;
+    return `<span>${c} <b>${fmt(new Date(u))}</b></span>`;
+  }).join('');
+  document.getElementById('clocks').innerHTML=html;
+  document.getElementById('foot-time').textContent='LOCAL '+fmt(now);
+}
+updateClocks();setInterval(updateClocks,1000);
+
+/* 날짜 */
+const t=new Date();
+document.getElementById('today').textContent=
+  t.getFullYear()+'.'+pad(t.getMonth()+1)+'.'+pad(t.getDate());
+
+/* reduce motion */
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+  // 정지형: 한 번만 렌더
+}
+</script>
+</body>
+</html>
