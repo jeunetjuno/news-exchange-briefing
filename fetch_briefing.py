@@ -19,6 +19,7 @@ import html
 import time
 import urllib.request
 import urllib.parse
+import urllib.error
 from datetime import datetime, timezone
 
 # ── 검색할 카테고리 & 키워드 (자유롭게 추가/수정하세요) ──
@@ -124,7 +125,7 @@ def claude_card(article: dict) -> dict:
         f"제목: {article['title']}. 요약: {article['description']}"
     )
     body = json.dumps({
-        "model": "claude-sonnet-5",
+        "model": "claude-sonnet-4-5-20250929",
         "max_tokens": 400,
         "messages": [{"role": "user", "content": prompt}],
     }).encode("utf-8")
@@ -147,8 +148,21 @@ def claude_card(article: dict) -> dict:
         card = json.loads(raw)
         card.setdefault("sev", "lo")
         return card
+    except urllib.error.HTTPError as e:
+        # API가 거부한 경우: 상태코드 + 응답 본문을 그대로 출력해 원인 파악
+        try:
+            err_body = e.read().decode("utf-8")
+        except Exception:
+            err_body = "(본문 읽기 실패)"
+        print(f"[ERROR] Claude API HTTP {e.code}: {err_body}")
+        return {
+            "global": article["description"][:90] or article["title"],
+            "korea": f"(API 오류 {e.code} - 로그 확인)",
+            "exchange": f"(API 오류 {e.code} - 로그 확인)",
+            "sev": "lo",
+        }
     except Exception as e:
-        print(f"[WARN] claude_card failed: {e}")
+        print(f"[ERROR] claude_card failed: {type(e).__name__}: {e}")
         return {
             "global": article["description"][:90] or article["title"],
             "korea": "(생성 실패 - 원문 참고)",
